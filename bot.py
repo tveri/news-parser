@@ -27,7 +27,7 @@ while True:
 
     if lastWriting != lastPublicationTimestamp:
         with open('./tmp', 'w', encoding='utf-8') as f:
-            print(f'writing tmp with timestamp: {lastPublicationTimestamp}')
+            print(f'writing tmp with timestamp: {lastPublicationTimestamp}', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
             f.write(str(lastPublicationTimestamp))
             lastWriting = int(lastPublicationTimestamp)
     print(format(datetime.datetime.now(), '%H:%M:%S  %D').center(100, '-'), file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
