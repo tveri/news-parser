@@ -1,9 +1,12 @@
 from bs4 import BeautifulSoup
 import requests, datetime
 
+import config
+
 
 def parseNews(url, lastPublicationTimestamp):
     req = requests.get(url)
+    print(f'news has got, status code: {req.status_code}', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     soup = BeautifulSoup(req.text, 'html.parser')
 
     newsList = []
@@ -24,6 +27,7 @@ def parseNews(url, lastPublicationTimestamp):
             continue
         
         req = requests.get(news['full-post-url'])
+        print(f'full news have got, status code: {req.status_code}', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
         soup = BeautifulSoup(req.text, 'html.parser')
 
         articleTextBlocks = soup.find('div', class_='article__body').find_all('div', class_='article__text')
