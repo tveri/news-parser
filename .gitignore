@@ -1,2 +1,5 @@
 venv/*
 __pycache__/*
+config.py
+tmp
+temp
