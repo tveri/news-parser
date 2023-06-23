@@ -1,17 +1,18 @@
 import telebot, requests, datetime, time
 from telebot import types
 
-import config, main
+import config, main, chat
 
 
 bot = telebot.TeleBot(config.API_TOKEN)
 
-url = 'https://ria.ru/society/'
+url = 'https://ria.ru/spetsialnaya-voennaya-operatsiya-na-ukraine/'
 sleepTime = 300
 
 
 with open('./tmp', 'r+', encoding='utf-8') as f:
-    lastPublicationTimestamp = int(f.readlines()[0])
+    fileTimestamp = int(f.readlines()[0])
+    lastPublicationTimestamp = fileTimestamp if int(datetime.datetime.now().timestamp()) - fileTimestamp < 3600 else int(datetime.datetime.now().timestamp())
     lastWriting = int(lastPublicationTimestamp)
 
 while True:
@@ -19,9 +20,19 @@ while True:
     print('parsing...', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     for news in main.parseNews(url, lastPublicationTimestamp):
         lastPublicationTimestamp = news['timestamp'] if news['timestamp'] > lastPublicationTimestamp else lastPublicationTimestamp
-        post = f"<b>{news['content']['title']}</b>\n\n{news['content']['article-text']}"
-        msg = bot.send_message(chat_id='@testnewsnews', text=post, parse_mode='HTML')
-        print(f"Post with title \"{news['content']['title']}\", message id: {msg.id}", file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
+        post = chat.textTransform(f"{news['content']['title']}\n\n{news['content']['article-text']}")
+        time.sleep(21)
+        keywords = chat.getKeywords(post)
+        time.sleep(21)
+        
+        while len(post) > 1024:
+            post = '\n'.join(post.split('\n')[:-1])
+
+        post = main.highlightWords(post.strip(), keywords)
+        
+
+        msg = bot.send_photo(chat_id='@testnewsnews', photo=requests.get(news['content']['img']['url']).content, caption=post[:1024], parse_mode='markdown')
+        print(f"Post title \"{news['content']['title']}\", message id: {msg.id}", file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     else:
         print('new posts weren\'t find', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
 

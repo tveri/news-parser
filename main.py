@@ -1,8 +1,9 @@
 from bs4 import BeautifulSoup
-import requests, datetime
+import requests, datetime, pymorphy2
 
 import config
 
+morph = pymorphy2.MorphAnalyzer()
 
 def parseNews(url, lastPublicationTimestamp):
     req = requests.get(url)
@@ -11,7 +12,7 @@ def parseNews(url, lastPublicationTimestamp):
 
     newsList = []
 
-    titles = list(soup.find_all(class_='list list-tags')[0].find_all('div', class_='list-item'))
+    titles = list(soup.find_all(class_='list')[0].find_all('div', class_='list-item'))
     for _, content, info, tags in titles:
         news = {}
         
@@ -41,7 +42,7 @@ def parseNews(url, lastPublicationTimestamp):
             'article-text': '\n\n'.join(fullText).replace(' – РИА Новости', '').replace(' РИА Новости', ''),
             'img': {
                 'alt': content.a.picture.img['alt'],
-                'url': content.a.picture.source['srcset'],
+                'url': content.a.picture.img['src'],
             },
         }
         
@@ -58,3 +59,19 @@ def parseNews(url, lastPublicationTimestamp):
 
         newsList.append(news)
     return newsList
+
+
+def highlightWords(text, keywords):
+    text = text.split(' ')
+    normalizedText = [morph.parse(word.strip(' ,.-'))[0].normal_form for word in text]
+    normalizedKeywords = [' '.join([morph.parse(word)[0].normal_form for word in keyword.split(' ')]) for keyword in keywords]
+    keywordsLens = set(len(word.split(' ')) for word in keywords)
+    for l in keywordsLens:
+        # print(f'\nwords-{l}-lenght\n')
+        for i, (word, normalizedWord) in enumerate(zip(text, normalizedText)):
+            if '*' in word or '_' in word: continue
+            words = text[i:i+l]
+            normalizedWords = normalizedText[i:i+l]
+            # print('\t', ' '.join(words), '\t|||\t', ' '.join(normalizedWords))
+            text[i:i+l] = [word.replace(stripedWord := word.strip(' ,.-\n'), f"*{stripedWord}*" if l != 3 else f"_{stripedWord}_") for word in words] if ' '.join(normalizedWords) in normalizedKeywords else text[i:i+l]
+    return ' '.join(text)
