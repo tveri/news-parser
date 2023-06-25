@@ -20,15 +20,21 @@ while True:
     print('parsing...', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     for news in main.parseNews(url, lastPublicationTimestamp):
         lastPublicationTimestamp = news['timestamp'] if news['timestamp'] > lastPublicationTimestamp else lastPublicationTimestamp
+        
         try:
             post = chat.textTransform(f"{news['content']['title']}\n\n{news['content']['article-text']}")
         except Exception as e:
             print(e, file=open(config.ERROR_LOG_FILE_PATH, 'a', encoding='utf-8'))
+            continue
+
         time.sleep(21)
+
         try:
             keywords = chat.getKeywords(post)
         except Exception as e:
             print(e, file=open(config.ERROR_LOG_FILE_PATH, 'a', encoding='utf-8'))
+            continue
+       
         time.sleep(21)
         
         while len(post) > 1024:
@@ -40,6 +46,7 @@ while True:
             msg = bot.send_photo(chat_id='@testnewsnews', photo=requests.get(news['content']['img']['url']).content, caption=post[:1024], parse_mode='markdown')
         except Exception as e:
             print(e, file=open(config.ERROR_LOG_FILE_PATH, 'a', encoding='utf-8'))
+            continue
         print(f"Post title \"{news['content']['title']}\", message id: {msg.id}", file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     else:
         print('new posts weren\'t find', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
