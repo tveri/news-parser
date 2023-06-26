@@ -6,7 +6,7 @@ import config, main, chat
 
 bot = telebot.TeleBot(config.API_TOKEN)
 
-url = 'https://ria.ru/spetsialnaya-voennaya-operatsiya-na-ukraine/'
+url = 'https://ria.ru/spetsialnaya-voennaya-operatsiya-na-ukraine+ukraina/'
 sleepTime = 300
 
 
