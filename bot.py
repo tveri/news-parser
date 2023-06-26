@@ -20,33 +20,23 @@ while True:
     print('parsing...', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     for news in main.parseNews(url, lastPublicationTimestamp):
         lastPublicationTimestamp = news['timestamp'] if news['timestamp'] > lastPublicationTimestamp else lastPublicationTimestamp
-        
         try:
             post = chat.textTransform(f"{news['content']['title']}\n\n{news['content']['article-text']}")
-        except Exception as e:
-            print(e, file=open(config.ERROR_LOG_FILE_PATH, 'a', encoding='utf-8'))
-            continue
+            time.sleep(21)
 
-        time.sleep(21)
-
-        try:
             keywords = chat.getKeywords(post)
-        except Exception as e:
-            print(e, file=open(config.ERROR_LOG_FILE_PATH, 'a', encoding='utf-8'))
-            continue
-       
-        time.sleep(21)
-        
-        while len(post) > 1024:
-            post = '\n'.join(post.split('\n')[:-1])
+            time.sleep(21)
+            
+            while len(post) > 1024:
+                post = '\n'.join(post.split('\n')[:-1])
 
-        post = main.highlightWords(post.strip(), keywords)
+            post = main.highlightWords(post.strip(), keywords)
         
-        try:
             msg = bot.send_photo(chat_id='@testnewsnews', photo=requests.get(news['content']['img']['url']).content, caption=post[:1024], parse_mode='markdown')
         except Exception as e:
             print(e, file=open(config.ERROR_LOG_FILE_PATH, 'a', encoding='utf-8'))
             continue
+        
         print(f"Post title \"{news['content']['title']}\", message id: {msg.id}", file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
     else:
         print('new posts weren\'t find', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
@@ -56,8 +46,10 @@ while True:
             print(f'writing tmp with timestamp: {lastPublicationTimestamp}', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
             f.write(str(lastPublicationTimestamp))
             lastWriting = int(lastPublicationTimestamp)
+    
     print(format(datetime.datetime.now(), '%H:%M:%S  %D').center(100, '-'), file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
-    time.sleep(sleepTime)
     print(f'waiting {round(sleepTime/60, 1)} mins...', file=open(config.LOG_FILE_PATH, 'a', encoding='utf-8'))
+    
+    time.sleep(sleepTime)
 
 # post = f"<b>{news['content']['title']}</b>\n\n{news['content']['article-text']}"
